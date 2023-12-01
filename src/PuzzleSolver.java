@@ -11,6 +11,8 @@ public class PuzzleSolver {
     private static final int SECOND_OPERAND_LENGTH = 4;
     private static final int RESULT_OPERAND_LENGTH = 5;
 
+    //TODO Add comments
+
     public static void main(String[] args) {
         try {
             String[] operands = readPuzzleFromFile("src/cryptarithmetic_input.txt");
@@ -19,8 +21,8 @@ public class PuzzleSolver {
                 writeSolutionToFile(solution, "cryptarithmetic_output.txt");
                 System.out.println("Solution written to " + "cryptarithmetic_output.txt");
             } else {
-                System.out.println("No solution exists.");
                 writeSolutionToFile(new String[]{"No solution"}, "cryptarithmetic_output.txt");
+                System.out.println("No solution exists.");
             }
         } catch (IOException e) {
             System.out.println("Error reading or writing file: " + e.getMessage());
@@ -51,6 +53,26 @@ public class PuzzleSolver {
             numericString.append(assignment.get(c));
         }
         return numericString.toString();
+    }
+
+    public static List<Character> getUniqueLetters(String puzzle) {
+        return puzzle.chars()
+                .filter(Character::isAlphabetic)
+                .mapToObj(c -> (char) c)
+                .collect(Collectors.toSet())
+                .stream()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    private static boolean isSolution(Map<Character, Integer> assignment, String firstOperand, String secondOperand, String resultOperand) {
+        // Convert the first and second operands and the result operand to their numeric values
+        long firstNumber = toNumericValue(firstOperand, assignment);
+        long secondNumber = toNumericValue(secondOperand, assignment);
+        long resultNumber = toNumericValue(resultOperand, assignment);
+
+        // Check if the sum of the first two operands equals the result operand
+        return firstNumber + secondNumber == resultNumber;
     }
 
     public static String[] solve(String firstOperand, String secondOperand, String resultOperand) {
@@ -153,17 +175,6 @@ public class PuzzleSolver {
         return mrvVariable;
     }
 
-
-    private static boolean isSolution(Map<Character, Integer> assignment, String firstOperand, String secondOperand, String resultOperand) {
-        // Convert the first and second operands and the result operand to their numeric values
-        long firstNumber = toNumericValue(firstOperand, assignment);
-        long secondNumber = toNumericValue(secondOperand, assignment);
-        long resultNumber = toNumericValue(resultOperand, assignment);
-
-        // Check if the sum of the first two operands equals the result operand
-        return firstNumber + secondNumber == resultNumber;
-    }
-
     private static long toNumericValue(String operand, Map<Character, Integer> assignment) {
         long value = 0;
         for (char c : operand.toCharArray()) {
@@ -174,27 +185,6 @@ public class PuzzleSolver {
             value = value * 10 + digit;
         }
         return value;
-    }
-
-
-    public static List<Character> getUniqueLetters(String puzzle) {
-        return puzzle.chars()
-                .filter(Character::isAlphabetic)
-                .mapToObj(c -> (char) c)
-                .collect(Collectors.toSet())
-                .stream()
-                .sorted()
-                .collect(Collectors.toList());
-    }
-
-    public static boolean isValidPermutation(String perm, List<Character> startingLetters, List<Character> letters) {
-        for (Character startingLetter : startingLetters) {
-            int index = letters.indexOf(startingLetter);
-            if (perm.charAt(index) == '0') {
-                return false;
-            }
-        }
-        return true;
     }
 
     private static List<Integer> getDomainValues(Character var, String firstOperand, String secondOperand, String resultOperand, Map<Character, Integer> assignment, List<Character> letters) {
@@ -209,7 +199,7 @@ public class PuzzleSolver {
         domain.sort((val1, val2) -> {
             int count1 = countLegalValuesAfterAssignment(var, val1, assignment, firstOperand, secondOperand, resultOperand, letters);
             int count2 = countLegalValuesAfterAssignment(var, val2, assignment, firstOperand, secondOperand, resultOperand, letters);
-            return Integer.compare(count2, count1); // Note: We want the larger count first, so we compare count2 to count1
+            return Integer.compare(count2, count1);
         });
 
         return domain;
