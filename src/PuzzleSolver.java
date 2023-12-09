@@ -1,5 +1,4 @@
 import java.io.*;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +62,7 @@ public class PuzzleSolver {
                         SECOND_OPERAND_LENGTH + ", " + RESULT_OPERAND_LENGTH + ".");
             }
 
-            // Validate that all strings contain only uppercase letters
+            // Validate operand characters
             if (!firstOperand.matches("[A-Z]+") || !secondOperand.matches("[A-Z]+") || !resultOperand.matches("[A-Z]+")) {
                 throw new IOException("Operands must only contain uppercase letters.");
             }
@@ -96,12 +95,8 @@ public class PuzzleSolver {
         return numericString.toString();
     }
 
-    public static boolean containsOnlyLetters(String... operands) {
-        return Arrays.stream(operands).allMatch(s -> s != null && s.matches("[A-Z]+"));
-    }
-
+    // Extract unique alphabetic characters from the puzzle and return them as a sorted list
     public static List<Character> getUniqueLetters(String puzzle) {
-        // Extract unique alphabetic characters from the puzzle and return them as a sorted list
         return puzzle.chars()
                 .filter(Character::isAlphabetic)
                 .mapToObj(c -> (char) c)
@@ -111,6 +106,14 @@ public class PuzzleSolver {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Checks if a given assignment of digits to letters solves the puzzle.
+     * @param assignment The current letter-to-digit mapping.
+     * @param firstOperand The first operand of the puzzle.
+     * @param secondOperand The second operand of the puzzle.
+     * @param resultOperand The result operand of the puzzle.
+     * @return True if the assignment solves the puzzle, otherwise false.
+     */
     private static boolean isSolution(Map<Character, Integer> assignment, String firstOperand, String secondOperand, String resultOperand) {
         // Convert the first and second operands and the result operand to their numeric values
         long firstNumber = toNumericValue(firstOperand, assignment);
@@ -165,7 +168,17 @@ public class PuzzleSolver {
         return null; // Return null to indicate no solution was found
     }
 
-
+    /**
+     * Checks if a proposed assignment of a digit to a letter is consistent with the puzzle's constraints.
+     * @param var The character variable to assign a value.
+     * @param value The digit value to assign to the variable.
+     * @param assignment The current assignment map of characters to digits.
+     * @param firstOperand The first operand of the puzzle.
+     * @param secondOperand The second operand of the puzzle.
+     * @param resultOperand The result operand of the puzzle.
+     * @param letters The list of unique characters in the puzzle.
+     * @return True if the assignment is consistent, otherwise false.
+     */
     private static boolean isConsistent(Character var, Integer value, Map<Character, Integer> assignment, String firstOperand, String secondOperand, String resultOperand, List<Character> letters) {
         // Check if the value is already assigned to another variable
         if (assignment.containsValue(value)) {
@@ -192,6 +205,15 @@ public class PuzzleSolver {
     }
 
 
+    /**
+     * Implements the backtracking search algorithm to find a solution to the puzzle.
+     * @param letters The list of unique characters in the puzzle.
+     * @param assignment The current assignment map of characters to digits.
+     * @param firstOperand The first operand of the puzzle.
+     * @param secondOperand The second operand of the puzzle.
+     * @param resultOperand The result operand of the puzzle.
+     * @return True if a solution is found, otherwise false.
+     */
     private static boolean backtrackSearch(List<Character> letters, Map<Character, Integer> assignment, String firstOperand, String secondOperand, String resultOperand) {
         if (assignment.size() == letters.size()) {
             return isSolution(assignment, firstOperand, secondOperand, resultOperand);
@@ -217,6 +239,15 @@ public class PuzzleSolver {
         return false; // No solution for this path
     }
 
+    /**
+     * Selects the next unassigned variable using the Minimum Remaining Values (MRV) heuristic.
+     * @param letters The list of unique characters in the puzzle.
+     * @param assignment The current letter-to-digit mapping.
+     * @param firstOperand The first operand of the puzzle.
+     * @param secondOperand The second operand of the puzzle.
+     * @param resultOperand The result operand of the puzzle.
+     * @return The next character to be assigned a value, or null if no such character exists.
+     */
     private static Character selectUnassignedVariable(List<Character> letters, Map<Character, Integer> assignment, String firstOperand, String secondOperand, String resultOperand) {
         Character mrvVariable = null;
         int minDomainSize = Integer.MAX_VALUE; // Initialize with the maximum possible value
@@ -240,7 +271,12 @@ public class PuzzleSolver {
         return mrvVariable; // Return the variable with the minimum remaining values
     }
 
-
+    /**
+     * Converts an operand string into its numeric value based on the current letter-to-digit mapping.
+     * @param operand The operand to be converted.
+     * @param assignment The current letter-to-digit mapping.
+     * @return The numeric value of the operand, or -1 if the assignment is incomplete.
+     */
     private static long toNumericValue(String operand, Map<Character, Integer> assignment) {
         long value = 0;
         for (char c : operand.toCharArray()) {
@@ -253,7 +289,16 @@ public class PuzzleSolver {
         return value; // Return the numeric value of the operand
     }
 
-
+    /**
+     * Determines the domain values for a given variable considering current assignments.
+     * @param var The character variable for which domain values are to be determined.
+     * @param firstOperand The first operand of the puzzle.
+     * @param secondOperand The second operand of the puzzle.
+     * @param resultOperand The result operand of the puzzle.
+     * @param assignment The current letter-to-digit mapping.
+     * @param letters The list of unique characters in the puzzle.
+     * @return A list of potential domain values for the given variable.
+     */
     private static List<Integer> getDomainValues(Character var, String firstOperand, String secondOperand, String resultOperand, Map<Character, Integer> assignment, List<Character> letters) {
         // Create a list of integers representing the possible domain values (0-9)
         List<Integer> domain = IntStream.rangeClosed(0, 9).boxed().collect(Collectors.toList());
@@ -274,6 +319,17 @@ public class PuzzleSolver {
         return domain; // Return the sorted domain values
     }
 
+    /**
+     * Counts the number of legal values for other variables after a given assignment.
+     * @param var The character variable being assigned a value.
+     * @param value The value being assigned to the character variable.
+     * @param assignment The current letter-to-digit mapping.
+     * @param firstOperand The first operand of the puzzle.
+     * @param secondOperand The second operand of the puzzle.
+     * @param resultOperand The result operand of the puzzle.
+     * @param letters The list of unique characters in the puzzle.
+     * @return The count of legal values for other variables after the assignment.
+     */
     private static int countLegalValuesAfterAssignment(Character var, Integer value, Map<Character, Integer> assignment, String firstOperand, String secondOperand, String resultOperand, List<Character> letters) {
         // Initialize a count of legal values for other variables after assigning 'value' to 'var'
         int count = 0;
